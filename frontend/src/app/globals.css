@@ -1,0 +1,157 @@
+@import "tailwindcss";
+
+/*
+  EarthShare design tokens.
+  Dark, glassmorphic, green/blue "sustainability ledger" theme — see
+  docs/DESIGN_NOTES.md for the rationale behind each choice. Every color
+  used anywhere in the app should trace back to one of these variables;
+  no ad-hoc hex codes in components.
+*/
+:root {
+  /* Surface */
+  --color-obsidian: #0b1410;       /* page background */
+  --color-pine: #11231c;           /* glass card base, before blur tint */
+  --color-pine-deep: #0e1c16;      /* slightly deeper surface, for nested cards */
+  --color-glass-border: rgba(255, 255, 255, 0.09);
+  --color-glass-border-strong: rgba(255, 255, 255, 0.16);
+
+  /* Accents */
+  --color-signal: #4ade80;         /* primary: growth, positive change */
+  --color-signal-dim: #214d34;
+  --color-glacier: #5ec8e0;        /* secondary: sky / ocean / future */
+  --color-glacier-dim: #1f3f49;
+  --color-ledger: #e8c468;         /* tertiary: ownership / dividend / share */
+  --color-ledger-dim: #4a3d20;
+  --color-ember: #f2935a;          /* highest-emission flag — paired w/ icon+label, not color alone */
+  --color-ember-dim: #4a2f1d;
+
+  /* Text */
+  --color-mist: #e7efe9;           /* primary text on dark */
+  --color-mist-dim: #9fb3a9;       /* secondary text on dark */
+  --color-mist-faint: #7d9189;     /* tertiary / placeholder text — WCAG AA ≥4.5:1 on obsidian */
+
+  --font-display: "Space Grotesk", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+@theme inline {
+  --color-obsidian: var(--color-obsidian);
+  --color-pine: var(--color-pine);
+  --color-pine-deep: var(--color-pine-deep);
+  --color-glass-border: var(--color-glass-border);
+  --color-glass-border-strong: var(--color-glass-border-strong);
+  --color-signal: var(--color-signal);
+  --color-signal-dim: var(--color-signal-dim);
+  --color-glacier: var(--color-glacier);
+  --color-glacier-dim: var(--color-glacier-dim);
+  --color-ledger: var(--color-ledger);
+  --color-ledger-dim: var(--color-ledger-dim);
+  --color-ember: var(--color-ember);
+  --color-ember-dim: var(--color-ember-dim);
+  --color-mist: var(--color-mist);
+  --color-mist-dim: var(--color-mist-dim);
+  --color-mist-faint: var(--color-mist-faint);
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-mono);
+}
+
+* {
+  border-color: var(--color-glass-border);
+}
+
+html {
+  /* Respect the user's browser/OS text-size setting rather than fighting
+     it — this is what "large text scaling" support actually means; we
+     never use px for font-size anywhere in the app. */
+  font-size: 100%;
+}
+
+body {
+  background: var(--color-obsidian);
+  color: var(--color-mist);
+  font-family: var(--font-body);
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4, .font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+.font-mono-tabular {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Glass card surface */
+.glass {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015));
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid var(--color-glass-border);
+}
+
+/* Visible, high-contrast focus ring everywhere — required for keyboard
+   navigation, and never suppressed with outline:none anywhere else. */
+:focus-visible {
+  outline: 2px solid var(--color-signal);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Screen-reader-only utility, used for accessible chart data tables and
+   skip links' surrounding context. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.sr-only-focusable:not(:focus) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+
+/* Ensure input focus ring matches global focus-visible for AXE compliance */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--color-signal);
+  outline-offset: 2px;
+  border-color: var(--color-signal);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@keyframes ring-glow {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+@keyframes slow-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
