@@ -83,7 +83,3 @@ app.include_router(insights.router)
 app.include_router(actions.router)
 app.include_router(progress.router)
 app.include_router(checkin.router)
-
-print("REGISTERED ROUTES:")
-for route in app.routes:
-    print(route.path)
