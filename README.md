@@ -1,6 +1,8 @@
 <div align="center">
 
-# 🌍 [![EarthShare][(https://earth-share.vercel.app/)]]
+# 🌍 EarthShare
+
+[(https://earth-share.vercel.app/)]]
 
 **Carbon ownership, not carbon awareness.**
 
