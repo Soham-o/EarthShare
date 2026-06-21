@@ -2,8 +2,6 @@
 
 # 🌍 EarthShare
 
-[(https://earth-share.vercel.app/)]]
-
 **Carbon ownership, not carbon awareness.**
 
 A full-stack carbon footprint platform that helps individuals *own* their climate impact through deterministic accounting, transparent insights, and a verifiable offset marketplace — built with clean architecture, security-first defaults, and accessibility baked in.
