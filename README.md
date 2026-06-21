@@ -151,13 +151,13 @@ We didn't just build a prototype; we built a tested, production-grade applicatio
 ## 📸 Product Walkthrough
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Soham-o/EarthShare/docs/screenshots/dashboard.png" width="48%">
-  <img src="https://raw.githubusercontent.com/Soham-o/EarthShare/docs/screenshots/insights.png" width="48%">
+  <img src="https://raw.githubusercontent.com/Soham-o/EarthShare/main/docs/screenshots/dashboard.png" width="48%">
+  <img src="https://raw.githubusercontent.com/Soham-o/EarthShare/main/docs/screenshots/insights.png" width="48%">
 </p>
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Soham-o/EarthShare/docs/screenshots/marketplace.png" width="48%">
-  <img src="https://raw.githubusercontent.com/Soham-o/EarthShare/docs/screenshots/progress.png" width="48%">
+  <img src="https://raw.githubusercontent.com/Soham-o/EarthShare/main/docs/screenshots/marketplace.png" width="48%">
+  <img src="https://raw.githubusercontent.com/Soham-o/EarthShare/main/docs/screenshots/progress.png" width="48%">
 </p>
 ---
 
