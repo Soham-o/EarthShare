@@ -3,11 +3,6 @@
 **Own a Share of the Planet.**
 
 ### Built for the Carbon Footprint Awareness Platform Challenge
-# 🌍 EarthShare
-
-**Own a Share of the Planet.**
-
-### Built for the Carbon Footprint Awareness Platform Challenge
 
 ---
 
