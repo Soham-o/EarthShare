@@ -11,6 +11,12 @@ A full-stack carbon-footprint prototype with a deterministic accounting engine, 
 ![Frontend: Next.js](https://img.shields.io/badge/frontend-Next.js-black)
 [![CI](https://github.com/Soham-o/EarthShare/actions/workflows/ci.yml/badge.svg)](https://github.com/Soham-o/EarthShare/actions/workflows/ci.yml)
 
+<br/>
+
+<img src="docs/screenshots/dashboard.png" width="860" alt="EarthShare dashboard: daily check-in, a carbon score ring at 565, monthly total of 520 kg CO2, dividend, reduction potential and yearly projections">
+
+<sub>The dashboard screen. More screens in the <a href="#8-product-walkthrough">product walkthrough</a>.</sub>
+
 </div>
 
 ---
@@ -287,23 +293,19 @@ The prototype separates routes, services, repositories, models and schemas, but 
 
 **Dashboard** — at-a-glance footprint, recent activities, and a clear next action.
 
-![Dashboard](docs/%20screenshots/dashboard.png)
-<!-- [DASHBOARD_IMAGE] -->
+![Dashboard](docs/screenshots/dashboard.png)
 
 **Insights** — breakdown by category, trend over time, and the largest contributors to your footprint.
 
-![Insights](docs/%20screenshots/insights.png)
-<!-- [INSIGHTS_IMAGE] -->
+![Insights](docs/screenshots/insights.png)
 
 **Action marketplace** — browse recommended climate actions, mark them complete, and see progress reflected in the app. This is not an offset-credit purchasing marketplace.
 
-![Action marketplace](docs/%20screenshots/marketplace.png)
-<!-- [MARKETPLACE_IMAGE] -->
+![Action marketplace](docs/screenshots/marketplace.png)
 
 **Progress** — view completed actions, estimated CO₂ savings, weekly trends and badges.
 
-![Progress](docs/%20screenshots/progress.png)
-<!-- [PROGRESS_IMAGE] -->
+![Progress](docs/screenshots/progress.png)
 
 ---
 
