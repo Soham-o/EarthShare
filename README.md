@@ -9,6 +9,7 @@ A full-stack carbon-footprint prototype with a deterministic accounting engine, 
 ![Status: prototype](https://img.shields.io/badge/status-prototype-orange)
 ![Backend: FastAPI](https://img.shields.io/badge/backend-FastAPI-009688)
 ![Frontend: Next.js](https://img.shields.io/badge/frontend-Next.js-black)
+[![CI](https://github.com/Soham-o/EarthShare/actions/workflows/ci.yml/badge.svg)](https://github.com/Soham-o/EarthShare/actions/workflows/ci.yml)
 
 </div>
 
@@ -16,11 +17,11 @@ A full-stack carbon-footprint prototype with a deterministic accounting engine, 
 
 ## Project summary
 
-> **What it is:** EarthShare turns climate guilt into climate ownership. Users log everyday activities, get a deterministic carbon estimate they can trust, and offset what they can't reduce through a transparent marketplace.
+> **What it is:** EarthShare is a carbon-footprint prototype. Users record everyday activities, receive deterministic emission estimates, view insights, and track progress by completing suggested climate actions.
 >
 > **Why it's different:** Most carbon apps focus on *awareness* (charts, streaks, badges). EarthShare focuses on *ownership* (account, measure, neutralize). The behavioral model is the product.
 >
-> **Engineering:** The backend includes JWT authentication, rate limiting, CORS configuration, security-header middleware and input validation. Carbon calculations are deterministic and do not use an LLM. SQLite is the local default; a production PostgreSQL deployment has not been verified.
+> **Engineering:** The backend includes JWT authentication, rate limiting, configurable CORS middleware, security headers, and request-schema validation. Carbon calculations are deterministic and do not use an LLM. SQLite is the local default; PostgreSQL migration and production deployment have not been verified.
 >
 
 
@@ -28,6 +29,7 @@ A full-stack carbon-footprint prototype with a deterministic accounting engine, 
 
 ## Table of Contents
 
+- [Local setup](#local-setup)
 1. [Problem Statement Alignment](#1-problem-statement-alignment)
 2. [Technical Excellence](#2-technical-excellence)
 3. [Security](#3-security)
@@ -38,9 +40,80 @@ A full-stack carbon-footprint prototype with a deterministic accounting engine, 
 8. [Product Walkthrough](#8-product-walkthrough)
 9. [Architecture Diagram](#9-architecture-diagram)
 10. [Repository Structure](#10-repository-structure)
-11. [Deployment](#11-deployment)
-12. [What Makes EarthShare Different](#12-what-makes-earthshare-different)
-13. [Evidence of Engineering Quality](#13-evidence-of-engineering-quality)
+11. [What Makes EarthShare Different](#11-what-makes-earthshare-different)
+12. [Evidence of Engineering Quality](#12-evidence-of-engineering-quality)
+
+## Local setup
+
+### Prerequisites
+
+- Python 3.11 or another version supported by the installed backend dependencies.
+- Node.js and npm.
+- No Gemini API key is required for local use; without one, insights use the rule-based fallback.
+
+### Backend
+
+From the repository root:
+
+```bash
+git clone https://github.com/Soham-o/EarthShare.git
+cd EarthShare
+python -m venv .venv
+# Activate the environment:
+# macOS/Linux: source .venv/bin/activate
+# Windows PowerShell: .\.venv\Scripts\Activate.ps1
+python -m pip install -r backend/requirements.txt
+```
+
+Copy `backend/.env.example` to `backend/.env`, then start the API:
+
+```bash
+# macOS/Linux
+cp backend/.env.example backend/.env
+# Windows PowerShell: Copy-Item backend/.env.example backend/.env
+
+cd backend
+uvicorn app.main:app --reload
+```
+
+The API defaults to local SQLite and is available at `http://localhost:8000`.
+
+### Frontend
+
+In a second terminal from the repository root:
+
+```bash
+cd frontend
+npm ci
+```
+
+Copy `frontend/.env.example` to `.env.local` in the `frontend/` directory, then run:
+
+```bash
+# macOS/Linux
+cp .env.example .env.local
+# Windows PowerShell: Copy-Item .env.example .env.local
+
+npm run dev
+```
+
+Open `http://localhost:3000`. The frontend's default API URL is `http://localhost:8000`. Never use the example JWT secret in a production deployment; configure a unique secret and explicit trusted CORS origins.
+
+### Tests
+
+```bash
+# Backend (from repository root, with the Python environment active)
+cd backend
+python -m pytest -q
+
+# Frontend (in a second terminal, from repository root)
+cd frontend
+npm ci
+npm test
+npm run build
+```
+
+[GitHub Actions](https://github.com/Soham-o/EarthShare/actions) runs backend tests, frontend tests and a frontend build for pull requests to `main` and pushes to `main` or `fix/**`.
 
 ---
 
@@ -81,7 +154,7 @@ All non-trivial logic — carbon calculation orchestration, user lifecycle, offs
 
 ### Repository Pattern
 Every database read/write goes through a repository. Benefits:
-- Swapping SQLite → Postgres is a connection-string change, not a refactor.
+- The database URL is centralized in configuration and SQLAlchemy sessions are injected; changing the database still requires a tested migration and deployment path.
 - Tests can substitute in-memory or fake repositories trivially.
 - Query logic is centralized and reviewable.
 
@@ -94,9 +167,9 @@ Every database read/write goes through a repository. Benefits:
 This is what makes the codebase easy to read, easy to test, and easy to extend.
 
 ### API Design
-- RESTful, resource-oriented endpoints (`/auth`, `/activities`, `/insights`, `/marketplace`, `/offsets`).
+- Versioned API routes cover authentication, onboarding, dashboard data, insights, actions, progress and daily check-ins under `/api/v1`.
 - Consistent JSON envelopes for success and error responses.
-- Predictable HTTP status codes (`400` validation, `401` auth, `403` permission, `404` missing, `409` conflict, `429` rate-limited, `500` server).
+- Structured HTTP responses use appropriate status codes for validation, authentication, missing resources, conflicts, rate limits and server errors.
 - Stateless authentication via JWT bearer tokens.
 
 ### Deterministic Carbon Engine
@@ -117,10 +190,10 @@ Security is implemented as defaults, not features.
 - **JWT authentication.** Stateless bearer tokens with signed payloads, expiry, and explicit verification on every protected route.
 - **Password hashing.** Passwords are stored using a modern adaptive hash (bcrypt-family) with per-user salts. Plaintext is never logged or returned.
 - **Rate limiting.** Sensitive endpoints (login, register, password actions) are rate-limited to blunt brute-force and credential-stuffing attempts.
-- **CORS protection.** Origins are explicitly allow-listed via environment configuration; wildcard `*` is rejected in production mode.
+- **CORS configuration.** Allowed origins are loaded from the `CORS_ORIGINS` environment setting. Configure explicit trusted origins in deployments; the current configuration code does not reject a wildcard automatically.
 - **Security headers.** API responses include `Content-Security-Policy`, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy` and `Permissions-Policy`. HSTS is enabled for production deployments.
-- **Input validation.** All request bodies and query params are validated against typed schemas before reaching any service. Invalid input returns `400` with a structured error, never a stack trace.
-- **Error handling.** A central error handler converts exceptions into safe JSON responses, strips internals from client-facing messages, and logs the full trace server-side with a correlation id.
+- **Input validation.** Typed request schemas validate inputs before route handlers call services. Schema-validation errors are typically returned as structured HTTP `422` responses; they should not expose stack traces.
+- **Error handling.** Unexpected exceptions return a generic JSON error, while the server logs the exception with the request method and path. A correlation ID is not currently implemented.
 
 Secrets (JWT signing key, DB URL, allowed origins) are loaded from environment variables only — never committed.
 
@@ -135,18 +208,16 @@ Secrets (JWT signing key, DB URL, allowed origins) are loaded from environment v
 - Auth tests covering registration, login, token expiry, and protected-route rejection.
 
 ### Frontend test suite
-- Component tests for forms, inputs, and result views.
-- Integration tests for the auth flow and the activity-logging flow.
-- API client tests with mocked transport.
+- Component tests cover the daily check-in card, emissions equity ring, form field, option grid and accessibility assertions.
+- The current suite is not a complete end-to-end test of all user journeys; manual screen-reader and keyboard-only review has not been verified.
 
-### Accessibility testing
-- Automated a11y assertions (axe-style checks) run as part of the component test suite.
-- Manual keyboard-only and screen-reader passes on primary flows.
+### Continuous integration
+- [GitHub Actions](https://github.com/Soham-o/EarthShare/actions) runs the backend test suite, frontend tests and a frontend production build on pull requests and pushes to `main` and `fix/**` branches.
+- Latest verified run: **85 backend tests passed, 1 skipped; 21 frontend tests passed; frontend build succeeded**. See the [CI run](https://github.com/Soham-o/EarthShare/actions/runs/38018851673).
 
-### Coverage strategy
-- **Cover the core, then the edges.** The deterministic carbon engine and the auth boundary are held to the highest coverage bar — they're the parts of the system where a regression is most expensive.
-- **Test behavior, not implementation.** Tests assert on observable outputs (HTTP responses, rendered DOM, calculator return values) so refactors don't trigger false failures.
-- **Fast by default.** The suite runs against in-process SQLite so CI stays under a coffee-sip.
+### Coverage notes
+- Tests exercise the carbon engine, API routes, authentication, daily check-ins, security headers and selected frontend components.
+- The CI suite is a useful regression baseline, not a security certification or proof that every feature is covered.
 
 ---
 
@@ -171,28 +242,23 @@ The carbon engine is a pure function over a static emission-factor table. Each c
 emissions = activity_quantity × factor[activity_type][region]
 ```
 
-That's an O(1) dictionary lookup and a multiplication. No model inference, no network round-trip, no cold start. The hot path is microseconds.
+For one activity, the calculation uses a constant-time factor-table lookup and arithmetic; no performance benchmark is published in this repository.
 
 ### Why local calculations reduce API dependency
-Because the engine runs in-process:
-- There is **no per-calculation cost** (no API quota, no vendor pricing).
-- There is **no failure mode** where a third-party outage breaks the product.
-- There is **no privacy egress** — user activity never leaves the server to be scored.
-- Results are **stable over time** — the factor table is versioned in-repo.
+The carbon calculation engine runs locally within the backend and uses an in-repository factor table:
+- The calculation itself does not require a third-party API call.
+- Its calculation path has no per-request model/API fee.
+- The factor table can be inspected and versioned with the source.
+- Optional insight generation and other app features may still use external services when configured.
 
 ### Why SQLite was chosen for hackathon deployment simplicity
 - Zero-ops: the database is a file. No provisioning, no separate service, no credentials to rotate during a demo.
 - Instant local dev: clone, install, run.
 - Trivial CI: tests run against an ephemeral in-memory DB.
-- Predictable: identical behavior on a laptop and on the hosted demo.
+- Automated backend tests use an in-memory SQLite database; live hosting parity has not been verified.
 
-### Why architecture is Postgres-ready
-Because all DB access goes through the **repository layer** and the ORM/connection is injected at startup, migrating to Postgres is a configuration change:
-1. Swap the connection string.
-2. Run the existing migrations against Postgres.
-3. No service, route, or domain code changes.
-
-The repository pattern is the bridge that makes SQLite "good enough for now" without making Postgres "a rewrite later."
+### Database configuration and migration status
+The database URL is centralized in `backend/app/core/config.py`, and the app uses SQLAlchemy sessions and repository classes. SQLite is the verified local/test default. PostgreSQL migration, migrations against a PostgreSQL instance, and production deployment have not been verified, so a connection-string change alone should not be presented as a proven migration path.
 
 ---
 
@@ -204,16 +270,16 @@ The repository pattern is the bridge that makes SQLite "good enough for now" wit
 |---|---|---|
 | **Clean Architecture (routes → services → repos → models)** | Keeps business rules independent of framework and DB | Easy to test, easy to refactor, easy to read |
 | **Service layer** | One place for business logic; routes stay thin | Reusable logic across HTTP, jobs, and tests |
-| **Repository pattern** | One place for persistence | SQLite → Postgres without touching domain code |
-| **Deterministic carbon engine** | Reproducibility and auditability beat cleverness here | Trustable numbers, microsecond performance, no vendor lock-in |
-| **JWT (stateless) auth** | No server-side session store needed | Horizontal scaling and serverless deploys are trivial |
+| **Repository pattern** | One place for persistence | Centralizes database access; alternate-database migration still needs validation |
+| **Deterministic carbon engine** | Reproducibility and auditability beat cleverness here | Repeatable calculations from a versioned factor table |
+| **JWT authentication** | Uses signed bearer tokens | Avoids a server-side session table for token state; production scale is not evaluated |
 | **SQLite for v1** | Zero-ops for the demo | Reliable hackathon-day deploy |
-| **Postgres-ready repos** | Don't pay a migration tax later | Production path is already drawn |
+| **Configurable database URL** | Keeps the connection setting in one place | PostgreSQL compatibility remains unverified |
 | **Typed API client on the frontend** | Single source of truth for request/response shapes | Fewer integration bugs, better DX |
-| **Accessibility from day one** | A11y is cheaper to build in than bolt on | WCAG-aligned UI, broader reach |
+| **Accessibility tests** | Catch selected accessibility regressions early | Automated accessibility assertions exist; full WCAG conformance is not claimed |
 | **LLMs out of the calculation path** | Determinism > novelty for a measurement product | Numbers a judge can verify by hand |
 
-The architecture is deliberately boring in the places that should be boring (auth, persistence, calculation) so that the *product* — ownership of carbon impact — can be the interesting thing.
+The prototype separates routes, services, repositories, models and schemas, but production readiness, hosted deployment and database migration still need independent validation.
 
 ---
 
@@ -221,22 +287,22 @@ The architecture is deliberately boring in the places that should be boring (aut
 
 **Dashboard** — at-a-glance footprint, recent activities, and a clear next action.
 
-![Dashboard](docs/images/dashboard.png)
+![Dashboard](docs/%20screenshots/dashboard.png)
 <!-- [DASHBOARD_IMAGE] -->
 
 **Insights** — breakdown by category, trend over time, and the largest contributors to your footprint.
 
-![Insights](docs/images/insights.png)
+![Insights](docs/%20screenshots/insights.png)
 <!-- [INSIGHTS_IMAGE] -->
 
-**Marketplace** — browse verified offset projects with transparent pricing and project metadata.
+**Action marketplace** — browse recommended climate actions, mark them complete, and see progress reflected in the app. This is not an offset-credit purchasing marketplace.
 
-![Marketplace](docs/images/marketplace.png)
+![Action marketplace](docs/%20screenshots/marketplace.png)
 <!-- [MARKETPLACE_IMAGE] -->
 
-**Progress** — track reductions and offsets over time so ownership compounds.
+**Progress** — view completed actions, estimated CO₂ savings, weekly trends and badges.
 
-![Progress](docs/images/progress.png)
+![Progress](docs/%20screenshots/progress.png)
 <!-- [PROGRESS_IMAGE] -->
 
 ---
@@ -245,18 +311,18 @@ The architecture is deliberately boring in the places that should be boring (aut
 
 ```mermaid
 flowchart LR
-    subgraph Client["🖥️ Frontend (Vercel)"]
+    subgraph Client["🖥️ Frontend"]
         UI["React UI<br/>WCAG-aligned"]
         APIClient["Typed API Client"]
     end
 
     subgraph Edge["🛡️ Edge Protections"]
-        CORS["CORS Allow-list"]
+        CORS["CORS middleware"]
         RL["Rate Limiter"]
         SH["Secure Headers"]
     end
 
-    subgraph Backend["⚙️ Backend (Render)"]
+    subgraph Backend["⚙️ Backend"]
         Routes["Routes Layer<br/>(thin: parse + validate)"]
         Services["Service Layer<br/>(business logic)"]
         Repos["Repository Layer<br/>(persistence)"]
@@ -265,7 +331,7 @@ flowchart LR
     end
 
     subgraph Data["💾 Data"]
-        DB[("SQLite today<br/>Postgres-ready")]
+        DB[("SQLite default<br/>PostgreSQL unverified")]
         Factors["Emission Factor Table<br/>(versioned in repo)"]
     end
 
@@ -288,62 +354,33 @@ flowchart LR
 
 ```
 earthshare/
+├── .github/
+│   └── workflows/
+│       └── ci.yml                  # backend tests, frontend tests and build
 ├── backend/
 │   ├── app/
-│   │   ├── main.py                 # App entrypoint, middleware wiring
-│   │   ├── config.py               # Env-driven configuration
-│   │   ├── routes/                 # Thin HTTP layer
-│   │   │   ├── auth.py
-│   │   │   ├── activities.py
-│   │   │   ├── insights.py
-│   │   │   ├── marketplace.py
-│   │   │   └── offsets.py
-│   │   ├── services/               # Business logic
-│   │   │   ├── auth_service.py
-│   │   │   ├── activity_service.py
-│   │   │   ├── insights_service.py
-│   │   │   └── offset_service.py
-│   │   ├── repositories/           # Persistence boundary
-│   │   │   ├── user_repository.py
-│   │   │   ├── activity_repository.py
-│   │   │   └── offset_repository.py
-│   │   ├── models/                 # Data models
-│   │   ├── schemas/                # Request/response validation
-│   │   ├── carbon/                 # Deterministic engine
-│   │   │   ├── engine.py
-│   │   │   └── factors.py
-│   │   ├── security/               # JWT, hashing, headers, rate limit
-│   │   └── errors/                 # Central error handling
+│   │   ├── api/v1/                 # authentication, onboarding, actions, etc.
+│   │   ├── core/                   # config, database, security and rate limits
+│   │   ├── models/
+│   │   ├── repositories/
+│   │   ├── schemas/
+│   │   ├── services/               # includes carbon_engine.py
+│   │   └── main.py
 │   ├── tests/
-│   │   ├── unit/
-│   │   ├── integration/
-│   │   └── conftest.py
-│   ├── migrations/
+│   ├── pytest.ini
 │   └── requirements.txt
 ├── frontend/
 │   ├── src/
-│   │   ├── app/                    # Routes / pages
-│   │   ├── components/             # Reusable UI (a11y-first)
-│   │   ├── features/
-│   │   │   ├── dashboard/
-│   │   │   ├── insights/
-│   │   │   ├── marketplace/
-│   │   │   └── progress/
-│   │   ├── lib/
-│   │   │   └── api-client.ts       # Typed API client
-│   │   ├── hooks/
-│   │   └── styles/
-│   ├── tests/
+│   │   ├── app/                    # Next.js routes and pages
 │   │   ├── components/
-│   │   ├── flows/
-│   │   └── a11y/
-│   └── package.json
+│   │   └── __tests__/              # component and accessibility tests
+│   ├── package.json
+│   └── package-lock.json
 ├── docs/
-│   └── images/
-├── .github/
-│   └── workflows/                  # CI: lint, test, a11y
-├── README.md
-└── LICENSE
+│   ├── ARCHITECTURE.md
+│   ├── CARBON_METHODOLOGY.md
+│   └── DESIGN_NOTES.md
+└── README.md
 ```
 
 ---
@@ -351,12 +388,11 @@ earthshare/
 
 ## 11. What Makes EarthShare Different
 
-- **Ownership > Awareness.** The product loop ends in *neutralize*, not *notice*.
-- **Deterministic by design.** The number you see is the number you can verify. No LLM in the calculation path.
-- **Trustable offsets.** The marketplace is a first-class surface, not a banner ad.
-- **Boring where it should be boring.** Auth, persistence, and calculation are conservative, well-tested, and well-separated.
-- **Accessible by default.** Keyboard, screen reader, and contrast are not a "v2."
-- **Hackathon-deployable, production-shaped.** SQLite today, Postgres tomorrow, zero refactor in between.
+- **Measure clearly.** The app estimates emissions from user-entered activity and an in-repository factor table.
+- **Deterministic calculation.** The carbon engine does not call an LLM to calculate emissions.
+- **Action-oriented workflow.** Suggested actions can be marked complete and reflected in progress.
+- **Security and accessibility checks.** The repository has automated tests for selected behaviors; it has not undergone a security audit or full accessibility conformance review.
+- **Prototype status.** Live deployment, production scaling and PostgreSQL migration remain unverified.
 
 ---
 
@@ -365,9 +401,9 @@ earthshare/
 ### Engineering signals a reviewer can verify in minutes
 - Routes contain no business logic. Open any route file and confirm.
 - Services contain no SQL. Open any service file and confirm.
-- The carbon engine has no I/O. Open `backend/app/carbon/engine.py` and confirm.
-- Auth is enforced at the boundary, not inside services. Open `backend/app/security/` and confirm.
-- The frontend talks to exactly one API client. Open `frontend/src/lib/api-client.ts` and confirm.
+- The deterministic carbon calculation is implemented in `backend/app/services/carbon_engine.py`.
+- Authentication dependencies and security configuration live under `backend/app/core/`.
+- The frontend API wrapper is `frontend/src/lib/api.ts`.
 
 ---
 
