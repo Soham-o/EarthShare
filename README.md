@@ -4,28 +4,25 @@
 
 **Carbon ownership, not carbon awareness.**
 
-A full-stack carbon footprint platform that helps individuals *own* their climate impact through deterministic accounting, transparent insights, and a verifiable offset marketplace — built with clean architecture, security-first defaults, and accessibility baked in.
+A full-stack carbon-footprint prototype with a deterministic accounting engine, a FastAPI backend and a Next.js frontend. The repository includes security and accessibility tests; this is a student project, not a security-audited production service.
 
-[![Code Quality](https://img.shields.io/badge/Code_Quality-89%2F100-brightgreen)](#evidence-of-engineering-quality)
-[![Security](https://img.shields.io/badge/Security-99%2F100-brightgreen)](#3-security)
-[![Testing](https://img.shields.io/badge/Testing-99%2F100-brightgreen)](#4-testing)
-[![Accessibility](https://img.shields.io/badge/Accessibility-99%2F100-brightgreen)](#5-accessibility)
-[![Alignment](https://img.shields.io/badge/Problem_Alignment-100%2F100-brightgreen)](#1-problem-statement-alignment)
-[![Overall](https://img.shields.io/badge/Overall-94.8%2F100-success)](#evidence-of-engineering-quality)
+![Status: prototype](https://img.shields.io/badge/status-prototype-orange)
+![Backend: FastAPI](https://img.shields.io/badge/backend-FastAPI-009688)
+![Frontend: Next.js](https://img.shields.io/badge/frontend-Next.js-black)
 
 </div>
 
 ---
 
-## Judge's 30-Second Summary
+## Project summary
 
 > **What it is:** EarthShare turns climate guilt into climate ownership. Users log everyday activities, get a deterministic carbon estimate they can trust, and offset what they can't reduce through a transparent marketplace.
 >
 > **Why it's different:** Most carbon apps focus on *awareness* (charts, streaks, badges). EarthShare focuses on *ownership* (account, measure, neutralize). The behavioral model is the product.
 >
-> **Why the engineering matters:** Clean Architecture + Service/Repository patterns + a deterministic carbon engine (no LLM in the calculation path) + JWT auth, rate limiting, CORS, secure headers, input validation + a tested, accessible UI. SQLite for hackathon-day simplicity, Postgres-ready for production.
+> **Engineering:** The backend includes JWT authentication, rate limiting, CORS configuration, security-header middleware and input validation. Carbon calculations are deterministic and do not use an LLM. SQLite is the local default; a production PostgreSQL deployment has not been verified.
 >
-> **Scoreboard:** Overall **94.8 / 100** — Security **99**, Testing **99**, Accessibility **99**, Problem Alignment **100**.
+
 
 ---
 
@@ -121,7 +118,7 @@ Security is implemented as defaults, not features.
 - **Password hashing.** Passwords are stored using a modern adaptive hash (bcrypt-family) with per-user salts. Plaintext is never logged or returned.
 - **Rate limiting.** Sensitive endpoints (login, register, password actions) are rate-limited to blunt brute-force and credential-stuffing attempts.
 - **CORS protection.** Origins are explicitly allow-listed via environment configuration; wildcard `*` is rejected in production mode.
-- **Secure headers.** Responses include hardening headers (e.g. `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, and HSTS when served over TLS).
+- **Security headers.** API responses include `Content-Security-Policy`, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy` and `Permissions-Policy`. HSTS is enabled for production deployments.
 - **Input validation.** All request bodies and query params are validated against typed schemas before reaching any service. Invalid input returns `400` with a structured error, never a stack trace.
 - **Error handling.** A central error handler converts exceptions into safe JSON responses, strips internals from client-facing messages, and logs the full trace server-side with a correlation id.
 

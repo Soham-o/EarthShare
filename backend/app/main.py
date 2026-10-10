@@ -45,9 +45,14 @@ app.add_middleware(
 async def security_headers(request: Request, call_next):
     response = await call_next(request)
 
-    # Only enable CSP in production
-    if settings.is_production:
+    # The health endpoint and versioned API return JSON, not HTML. Apply a
+    # strict API CSP in every environment, while leaving FastAPI's interactive
+    # documentation routes untouched because Swagger UI needs scripts/styles.
+    if request.url.path == "/health" or request.url.path.startswith("/api/"):
         response.headers["Content-Security-Policy"] = _API_CSP
+
+    # HSTS is only appropriate for production deployments served over HTTPS.
+    if settings.is_production:
         response.headers["Strict-Transport-Security"] = (
             "max-age=63072000; includeSubDomains"
         )
