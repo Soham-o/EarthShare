@@ -58,10 +58,10 @@ From the repository root:
 ```bash
 git clone https://github.com/Soham-o/EarthShare.git
 cd EarthShare
-python -m venv .venv
+python -m venv backend/.venv
 # Activate the environment:
-# macOS/Linux: source .venv/bin/activate
-# Windows PowerShell: .\.venv\Scripts\Activate.ps1
+# macOS/Linux: source backend/.venv/bin/activate
+# Windows PowerShell: .\backend\.venv\Scripts\Activate.ps1
 python -m pip install -r backend/requirements.txt
 ```
 
