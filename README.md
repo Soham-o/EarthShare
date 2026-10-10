@@ -29,6 +29,7 @@ A full-stack carbon-footprint prototype with a deterministic accounting engine, 
 
 ## Table of Contents
 
+- [Local setup](#local-setup)
 1. [Problem Statement Alignment](#1-problem-statement-alignment)
 2. [Technical Excellence](#2-technical-excellence)
 3. [Security](#3-security)
@@ -41,6 +42,78 @@ A full-stack carbon-footprint prototype with a deterministic accounting engine, 
 10. [Repository Structure](#10-repository-structure)
 11. [What Makes EarthShare Different](#11-what-makes-earthshare-different)
 12. [Evidence of Engineering Quality](#12-evidence-of-engineering-quality)
+
+## Local setup
+
+### Prerequisites
+
+- Python 3.11 or another version supported by the installed backend dependencies.
+- Node.js and npm.
+- No Gemini API key is required for local use; without one, insights use the rule-based fallback.
+
+### Backend
+
+From the repository root:
+
+```bash
+git clone https://github.com/Soham-o/EarthShare.git
+cd EarthShare
+python -m venv .venv
+# Activate the environment:
+# macOS/Linux: source .venv/bin/activate
+# Windows PowerShell: .\.venv\Scripts\Activate.ps1
+python -m pip install -r backend/requirements.txt
+```
+
+Copy `backend/.env.example` to `backend/.env`, then start the API:
+
+```bash
+# macOS/Linux
+cp backend/.env.example backend/.env
+# Windows PowerShell: Copy-Item backend/.env.example backend/.env
+
+cd backend
+uvicorn app.main:app --reload
+```
+
+The API defaults to local SQLite and is available at `http://localhost:8000`.
+
+### Frontend
+
+In a second terminal from the repository root:
+
+```bash
+cd frontend
+npm ci
+```
+
+Copy `frontend/.env.example` to `.env.local` in the `frontend/` directory, then run:
+
+```bash
+# macOS/Linux
+cp .env.example .env.local
+# Windows PowerShell: Copy-Item .env.example .env.local
+
+npm run dev
+```
+
+Open `http://localhost:3000`. The frontend's default API URL is `http://localhost:8000`. Never use the example JWT secret in a production deployment; configure a unique secret and explicit trusted CORS origins.
+
+### Tests
+
+```bash
+# Backend (from repository root, with the Python environment active)
+cd backend
+python -m pytest -q
+
+# Frontend (in a second terminal, from repository root)
+cd frontend
+npm ci
+npm test
+npm run build
+```
+
+[GitHub Actions](https://github.com/Soham-o/EarthShare/actions) runs backend tests, frontend tests and a frontend build for pull requests to `main` and pushes to `main` or `fix/**`.
 
 ---
 
@@ -169,7 +242,7 @@ The carbon engine is a pure function over a static emission-factor table. Each c
 emissions = activity_quantity × factor[activity_type][region]
 ```
 
-That's an O(1) dictionary lookup and a multiplication. No model inference, no network round-trip, no cold start. The hot path is microseconds.
+For one activity, the calculation uses a constant-time factor-table lookup and arithmetic; no performance benchmark is published in this repository.
 
 ### Why local calculations reduce API dependency
 The carbon calculation engine runs locally within the backend and uses an in-repository factor table:
